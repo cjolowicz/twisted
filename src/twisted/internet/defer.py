@@ -795,16 +795,19 @@ class _CallbackRunner:
         deferred._chainedTo = None
 
         while deferred.callbacks:
-            item = deferred.callbacks.pop(0)
-            callback, args, kw = item[
-                isinstance(deferred.result, failure.Failure)]
-            args = args or ()
-            kw = kw or {}
-
+            callback, args, kw = self._popCallback(deferred)
             finished = self._runCallback(deferred, callback, *args, **kw)
             if finished is not None:
                 return finished
+
         return True
+
+
+    def _popCallback(self, deferred):
+        item = deferred.callbacks.pop(0)
+        callback, args, kw = item[
+            isinstance(deferred.result, failure.Failure)]
+        return callback, args or (), kw or {}
 
 
     def _runCallback(self, deferred, callback, *args, **kw):
