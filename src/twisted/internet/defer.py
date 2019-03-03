@@ -719,6 +719,13 @@ class Deferred:
         return not (result is _NO_RESULT or isinstance(result, Deferred) or self.paused)
 
 
+    def _stealResult(self, other):
+        self.result, other.result = other.result, None
+        # Make sure _debugInfo's failure state is updated.
+        if other._debugInfo is not None:
+            other._debugInfo.failResult = None
+
+
     def _updateDebugInfo(self):
         if isinstance(self.result, failure.Failure):
             # Stash the Failure in the _debugInfo for unhandled error
@@ -732,13 +739,6 @@ class Deferred:
             # is no longer a Failure.
             if self._debugInfo is not None:
                 self._debugInfo.failResult = None
-
-
-    def _stealResult(self, other):
-        self.result, other.result = other.result, None
-        # Make sure _debugInfo's failure state is updated.
-        if other._debugInfo is not None:
-            other._debugInfo.failResult = None
 
 
     def __str__(self):
