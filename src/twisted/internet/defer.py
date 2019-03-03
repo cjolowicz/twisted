@@ -632,6 +632,17 @@ class Deferred:
         return callback, args or (), kw or {}
 
 
+    def _continueWith(self, other):
+        # Give the waiting Deferred our current result and then
+        # forget about that result ourselves.
+        other.result = self.result
+        self.result = None
+        # Making sure to update _debugInfo
+        if self._debugInfo is not None:
+            self._debugInfo.failResult = None
+        other.paused -= 1
+
+
     def __str__(self):
         """
         Return a string representation of this C{Deferred}.
@@ -807,7 +818,7 @@ class _CallbackRunner:
             # Avoid recursion if we can.
             if callback is _CONTINUE:
                 chainee = args[0]
-                self._continueWith(deferred, chainee)
+                deferred._continueWith(chainee)
                 self.chain.append(chainee)
                 # Delay cleaning this Deferred and popping it from the chain
                 # until after we've dealt with chainee.
@@ -817,17 +828,6 @@ class _CallbackRunner:
                 return True
 
         return True
-
-
-    def _continueWith(self, deferred, chainee):
-        # Give the waiting Deferred our current result and then
-        # forget about that result ourselves.
-        chainee.result = deferred.result
-        deferred.result = None
-        # Making sure to update _debugInfo
-        if deferred._debugInfo is not None:
-            deferred._debugInfo.failResult = None
-        chainee.paused -= 1
 
 
     def _runCallback(self, deferred, callback, *args, **kw):
