@@ -676,6 +676,13 @@ class Deferred:
             self._runningCallbacks = False
 
 
+    def _stealResult(self, other):
+        self.result, other.result = other.result, None
+        # Make sure _debugInfo's failure state is updated.
+        if other._debugInfo is not None:
+            other._debugInfo.failResult = None
+
+
     def __str__(self):
         """
         Return a string representation of this C{Deferred}.
@@ -866,20 +873,13 @@ class _CallbackRunner:
                     break
 
                 # Yep, it did.  Steal it.
-                self._stealResult(deferred, other)
+                deferred._stealResult(other)
 
         # As much of the callback chain - perhaps all of it - as can be
         # processed right now has been.  The current Deferred is waiting on
         # another Deferred or for more callbacks.  Before finishing with it,
         # make sure its _debugInfo is in the proper state.
         deferred._updateDebugInfo()
-
-
-    def _stealResult(self, deferred, other):
-        deferred.result, other.result = other.result, None
-        # Make sure _debugInfo's failure state is updated.
-        if other._debugInfo is not None:
-            other._debugInfo.failResult = None
 
 
 def _cancelledToTimedOutError(value, timeout):
