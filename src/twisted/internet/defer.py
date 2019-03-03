@@ -643,11 +643,9 @@ class Deferred:
         other.paused -= 1
 
 
-    def _getResult(self):
+    def _hasResult(self):
         result = getattr(self, 'result', _NO_RESULT)
-        if isinstance(result, Deferred) or self.paused:
-            return _NO_RESULT
-        return result
+        return not (result is _NO_RESULT or isinstance(result, Deferred) or self.paused)
 
 
     def _runCallback(self, callback, *args, **kw):
@@ -862,12 +860,11 @@ class _CallbackRunner:
 
 
     def _processDeferred(self, deferred, other):
-        otherResult = other._getResult()
-        if otherResult is _NO_RESULT:
+        if not other._hasResult():
             self._chainDeferred(deferred, other)
             return True
 
-        self._stealResult(deferred, other, otherResult)
+        self._stealResult(deferred, other, other.result)
 
 
     def _chainDeferred(self, deferred, other):
