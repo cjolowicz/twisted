@@ -796,6 +796,14 @@ class _CallbackRunner:
 
         while deferred.callbacks:
             callback, args, kw = self._popCallback(deferred)
+
+            # Avoid recursion if we can.
+            if callback is _CONTINUE:
+                self._continueWith(deferred, args[0])
+                # Delay cleaning this Deferred and popping it from the chain
+                # until after we've dealt with chainee.
+                return False
+
             finished = self._runCallback(deferred, callback, *args, **kw)
             if finished is not None:
                 return finished
@@ -811,13 +819,6 @@ class _CallbackRunner:
 
 
     def _runCallback(self, deferred, callback, *args, **kw):
-        # Avoid recursion if we can.
-        if callback is _CONTINUE:
-            self._continueWith(deferred, args[0])
-            # Delay cleaning this Deferred and popping it from the chain
-            # until after we've dealt with chainee.
-            return False
-
         try:
             self._invokeCallback(deferred, callback, *args, **kw)
         except:
