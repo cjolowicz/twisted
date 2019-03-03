@@ -610,6 +610,21 @@ class Deferred:
         runner.run()
 
 
+    def _updateDebugInfo(self):
+        if isinstance(self.result, failure.Failure):
+            # Stash the Failure in the _debugInfo for unhandled error
+            # reporting.
+            self.result.cleanFailure()
+            if self._debugInfo is None:
+                self._debugInfo = DebugInfo()
+            self._debugInfo.failResult = self.result
+        else:
+            # Clear out any Failure in the _debugInfo, since the result
+            # is no longer a Failure.
+            if self._debugInfo is not None:
+                self._debugInfo.failResult = None
+
+
     def __str__(self):
         """
         Return a string representation of this C{Deferred}.
@@ -769,26 +784,11 @@ class _CallbackRunner:
                 # processed right now has been.  The current Deferred is waiting on
                 # another Deferred or for more callbacks.  Before finishing with it,
                 # make sure its _debugInfo is in the proper state.
-                self._updateDebugInfo(deferred)
+                deferred._updateDebugInfo()
 
                 # This Deferred is done, pop it from the chain and move back up
                 # to the Deferred which supplied us with our result.
                 self.chain.pop()
-
-
-    def _updateDebugInfo(self, deferred):
-        if isinstance(deferred.result, failure.Failure):
-            # Stash the Failure in the _debugInfo for unhandled error
-            # reporting.
-            deferred.result.cleanFailure()
-            if deferred._debugInfo is None:
-                deferred._debugInfo = DebugInfo()
-            deferred._debugInfo.failResult = deferred.result
-        else:
-            # Clear out any Failure in the _debugInfo, since the result
-            # is no longer a Failure.
-            if deferred._debugInfo is not None:
-                deferred._debugInfo.failResult = None
 
 
     def _runDeferred(self, deferred):
