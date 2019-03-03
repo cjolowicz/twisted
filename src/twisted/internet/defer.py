@@ -824,24 +824,9 @@ class _CallbackRunner:
             if isinstance(current.result, Deferred):
                 # The result is another Deferred.  If it has a result,
                 # we can take it and keep going.
-                resultResult = getattr(current.result, 'result', _NO_RESULT)
-                if resultResult is _NO_RESULT or isinstance(resultResult, Deferred) or current.result.paused:
-                    # Nope, it didn't.  Pause and chain.
-                    current.pause()
-                    current._chainedTo = current.result
-                    # Note: current.result has no result, so it's not
-                    # running its callbacks right now.  Therefore we can
-                    # append to the callbacks list directly instead of
-                    # using addCallbacks.
-                    current.result.callbacks.append(current._continuation())
+                finished = self._processDeferred(current, current.result)
+                if finished:
                     return True
-                else:
-                    # Yep, it did.  Steal it.
-                    current.result.result = None
-                    # Make sure _debugInfo's failure state is updated.
-                    if current.result._debugInfo is not None:
-                        current.result._debugInfo.failResult = None
-                    current.result = resultResult
 
 
     def _processChainee(self, current, chainee):
@@ -872,6 +857,27 @@ class _CallbackRunner:
                     "exception in the future.")
         finally:
             current._runningCallbacks = False
+
+
+    def _processDeferred(self, current, deferred):
+        resultResult = getattr(deferred, 'result', _NO_RESULT)
+        if resultResult is _NO_RESULT or isinstance(resultResult, Deferred) or deferred.paused:
+            # Nope, it didn't.  Pause and chain.
+            current.pause()
+            current._chainedTo = deferred
+            # Note: deferred has no result, so it's not
+            # running its callbacks right now.  Therefore we can
+            # append to the callbacks list directly instead of
+            # using addCallbacks.
+            deferred.callbacks.append(current._continuation())
+            return True
+        else:
+            # Yep, it did.  Steal it.
+            deferred.result = None
+            # Make sure _debugInfo's failure state is updated.
+            if deferred._debugInfo is not None:
+                deferred._debugInfo.failResult = None
+            deferred = resultResult
 
 
 def _cancelledToTimedOutError(value, timeout):
