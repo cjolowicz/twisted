@@ -753,6 +753,7 @@ class _CallbackRunner:
         self.chain = chain
         self.debug = debug
 
+
     def run(self):
         while self.chain:
             current = self.chain[-1]
