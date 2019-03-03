@@ -815,18 +815,7 @@ class _CallbackRunner:
             return self._chainDeferred(current, args[0])
 
         try:
-            current._runningCallbacks = True
-            try:
-                current.result = callback(current.result, *args, **kw)
-                if current.result is current:
-                    warnAboutFunction(
-                        callback,
-                        "Callback returned the Deferred "
-                        "it was attached to; this breaks the "
-                        "callback chain and will raise an "
-                        "exception in the future.")
-            finally:
-                current._runningCallbacks = False
+            self._invokeCallback(current, callback, *args, **kw)
         except:
             # Including full frame information in the Failure is quite
             # expensive, so we avoid it unless self.debug is set.
@@ -868,6 +857,21 @@ class _CallbackRunner:
         # Delay cleaning this Deferred and popping it from the chain
         # until after we've dealt with chainee.
         return False
+
+
+    def _invokeCallback(self, current, callback, *args, **kw):
+        current._runningCallbacks = True
+        try:
+            current.result = callback(current.result, *args, **kw)
+            if current.result is current:
+                warnAboutFunction(
+                    callback,
+                    "Callback returned the Deferred "
+                    "it was attached to; this breaks the "
+                    "callback chain and will raise an "
+                    "exception in the future.")
+        finally:
+            current._runningCallbacks = False
 
 
 def _cancelledToTimedOutError(value, timeout):
