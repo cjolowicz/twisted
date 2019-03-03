@@ -771,23 +771,26 @@ class _CallbackRunner:
                 # processed right now has been.  The current Deferred is waiting on
                 # another Deferred or for more callbacks.  Before finishing with it,
                 # make sure its _debugInfo is in the proper state.
-                if isinstance(current.result, failure.Failure):
-                    # Stash the Failure in the _debugInfo for unhandled error
-                    # reporting.
-                    current.result.cleanFailure()
-                    if current._debugInfo is None:
-                        current._debugInfo = DebugInfo()
-                    current._debugInfo.failResult = current.result
-                else:
-                    # Clear out any Failure in the _debugInfo, since the result
-                    # is no longer a Failure.
-                    if current._debugInfo is not None:
-                        current._debugInfo.failResult = None
+                self._updateDebugInfo(current)
 
                 # This Deferred is done, pop it from the chain and move back up
                 # to the Deferred which supplied us with our result.
                 self.chain.pop()
 
+
+    def _updateDebugInfo(self, current):
+        if isinstance(current.result, failure.Failure):
+            # Stash the Failure in the _debugInfo for unhandled error
+            # reporting.
+            current.result.cleanFailure()
+            if current._debugInfo is None:
+                current._debugInfo = DebugInfo()
+            current._debugInfo.failResult = current.result
+        else:
+            # Clear out any Failure in the _debugInfo, since the result
+            # is no longer a Failure.
+            if current._debugInfo is not None:
+                current._debugInfo.failResult = None
 
     def _runCurrent(self, current):
         finished = True
