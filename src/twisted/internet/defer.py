@@ -606,14 +606,7 @@ class Deferred:
             # Don't recursively run callbacks
             return
 
-        # Keep track of all the Deferreds encountered while propagating results
-        # up a chain.  The way a Deferred gets onto this stack is by having
-        # added its _continuation() to the callbacks list of a second Deferred
-        # and then that second Deferred being fired.  ie, if ever had _chainedTo
-        # set to something other than None, you might end up on this stack.
-        chain = [self]
-
-        runner = _CallbackRunner(chain, self.debug)
+        runner = _CallbackRunner(self)
         runner.run()
 
 
@@ -749,9 +742,14 @@ class Deferred:
 
 
 class _CallbackRunner:
-    def __init__(self, chain, debug):
-        self.chain = chain
-        self.debug = debug
+    def __init__(self, deferred):
+        # Keep track of all the Deferreds encountered while propagating results
+        # up a chain.  The way a Deferred gets onto this stack is by having
+        # added its _continuation() to the callbacks list of a second Deferred
+        # and then that second Deferred being fired.  ie, if ever had _chainedTo
+        # set to something other than None, you might end up on this stack.
+        self.chain = [deferred]
+        self.debug = deferred.debug
 
 
     def run(self):
