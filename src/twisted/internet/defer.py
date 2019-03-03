@@ -812,19 +812,7 @@ class _CallbackRunner:
     def _runCurrentCallback(self, current, callback, *args, **kw):
         # Avoid recursion if we can.
         if callback is _CONTINUE:
-            # Give the waiting Deferred our current result and then
-            # forget about that result ourselves.
-            chainee = args[0]
-            chainee.result = current.result
-            current.result = None
-            # Making sure to update _debugInfo
-            if current._debugInfo is not None:
-                current._debugInfo.failResult = None
-            chainee.paused -= 1
-            self.chain.append(chainee)
-            # Delay cleaning this Deferred and popping it from the chain
-            # until after we've dealt with chainee.
-            return False
+            return self._chainDeferred(current, args[0])
 
         try:
             current._runningCallbacks = True
@@ -865,6 +853,21 @@ class _CallbackRunner:
                     if current.result._debugInfo is not None:
                         current.result._debugInfo.failResult = None
                     current.result = resultResult
+
+
+    def _chainDeferred(self, current, chainee):
+        # Give the waiting Deferred our current result and then
+        # forget about that result ourselves.
+        chainee.result = current.result
+        current.result = None
+        # Making sure to update _debugInfo
+        if current._debugInfo is not None:
+            current._debugInfo.failResult = None
+        chainee.paused -= 1
+        self.chain.append(chainee)
+        # Delay cleaning this Deferred and popping it from the chain
+        # until after we've dealt with chainee.
+        return False
 
 
 def _cancelledToTimedOutError(value, timeout):
