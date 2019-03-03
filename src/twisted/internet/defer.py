@@ -634,6 +634,8 @@ class Deferred:
             chainee = current._runCallbacksToChainee()
 
             if chainee:
+                # Delay cleaning this Deferred and popping it from the chain
+                # until after we've dealt with chainee.
                 chain.append(chainee)
             else:
                 # This Deferred is done, pop it from the chain and move back up
@@ -651,8 +653,6 @@ class Deferred:
             if callback is _CONTINUE:
                 chainee = args[0]
                 self._continueWith(chainee)
-                # Delay cleaning this Deferred and popping it from the chain
-                # until after we've dealt with chainee.
                 return chainee
 
             self._runCallback(callback, *args, **kw)
