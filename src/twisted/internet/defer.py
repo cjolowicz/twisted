@@ -651,9 +651,9 @@ class Deferred:
 
             # Avoid recursion if we can.
             if callback is _CONTINUE:
-                chainee = args[0]
                 # Give the waiting Deferred our current result and then
                 # forget about that result ourselves.
+                chainee = args[0]
                 chainee._takeResult(self)
                 chainee.paused -= 1
                 return chainee
