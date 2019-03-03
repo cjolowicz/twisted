@@ -844,11 +844,11 @@ class _CallbackRunner:
             # Including full frame information in the Failure is quite
             # expensive, so we avoid it unless self.debug is set.
             deferred.result = failure.Failure(captureVars=self.debug)
-        else:
-            if isinstance(deferred.result, Deferred):
-                # The result is another Deferred.  If it has a result,
-                # we can take it and keep going.
-                return self._processDeferred(deferred, deferred.result)
+
+        if isinstance(deferred.result, Deferred):
+            # The result is another Deferred.  If it has a result,
+            # we can take it and keep going.
+            return self._processDeferred(deferred, deferred.result)
 
 
     def _invokeCallback(self, deferred, callback, *args, **kw):
