@@ -808,7 +808,6 @@ class _CallbackRunner:
         # and then that second Deferred being fired.  ie, if ever had _chainedTo
         # set to something other than None, you might end up on this stack.
         self.chain = [deferred]
-        self.debug = deferred.debug
 
 
     def run(self):
