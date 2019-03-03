@@ -792,6 +792,7 @@ class _CallbackRunner:
             if current._debugInfo is not None:
                 current._debugInfo.failResult = None
 
+
     def _runCurrent(self, current):
         finished = True
         current._chainedTo = None
