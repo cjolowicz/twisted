@@ -643,6 +643,13 @@ class Deferred:
         other.paused -= 1
 
 
+    def _getResult(self):
+        result = getattr(self, 'result', _NO_RESULT)
+        if isinstance(result, Deferred) or self.paused:
+            return _NO_RESULT
+        return result
+
+
     def __str__(self):
         """
         Return a string representation of this C{Deferred}.
@@ -860,7 +867,7 @@ class _CallbackRunner:
 
 
     def _processDeferred(self, deferred, other):
-        otherResult = self._getResult(other)
+        otherResult = other._getResult()
         if otherResult is _NO_RESULT:
             # Nope, it didn't.  Pause and chain.
             deferred.pause()
@@ -878,13 +885,6 @@ class _CallbackRunner:
         if other._debugInfo is not None:
             other._debugInfo.failResult = None
         deferred.result = otherResult
-
-
-    def _getResult(self, deferred):
-        result = getattr(deferred, 'result', _NO_RESULT)
-        if isinstance(result, Deferred) or deferred.paused:
-            return _NO_RESULT
-        return result
 
 
 def _cancelledToTimedOutError(value, timeout):
