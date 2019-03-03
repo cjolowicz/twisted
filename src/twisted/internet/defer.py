@@ -436,20 +436,16 @@ class Deferred:
 
 
     def _chainDeferred(self, d):
+        """
+        Add callback and errback with L{_CONTINUE}.
+        """
         d._chainedTo = self
         # Note: self has no result, so it's not
         # running its callbacks right now.  Therefore we can
         # append to the callbacks list directly instead of
         # using addCallbacks.
-        self.callbacks.append(d._continuation())
-
-
-    def _continuation(self):
-        """
-        Build a tuple of callback and errback with L{_CONTINUE}.
-        """
-        return ((_CONTINUE, (self,), None),
-                (_CONTINUE, (self,), None))
+        self.callbacks.append(((_CONTINUE, (d,), None),
+                               (_CONTINUE, (d,), None)))
 
 
     def callback(self, result):
@@ -617,9 +613,9 @@ class Deferred:
 
         # Keep track of all the Deferreds encountered while propagating results
         # up a chain.  The way a Deferred gets onto this stack is by having
-        # added its _continuation() to the callbacks list of a second Deferred
-        # and then that second Deferred being fired.  ie, if ever had _chainedTo
-        # set to something other than None, you might end up on this stack.
+        # chained itself to a second Deferred using _chainDeferred() and then
+        # that second Deferred being fired.  ie, if ever had _chainedTo set to
+        # something other than None, you might end up on this stack.
         chain = [self]
 
         while chain:
