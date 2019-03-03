@@ -658,7 +658,7 @@ class Deferred:
                 chainee.paused -= 1
                 return chainee
 
-            self._runCallback(callback, *args, **kw)
+            self.result = self._runCallback(callback, *args, **kw)
 
             if isinstance(self.result, Deferred):
                 # The result is another Deferred.  If it has a result,
@@ -690,18 +690,19 @@ class Deferred:
     def _runCallback(self, callback, *args, **kw):
         try:
             self._runningCallbacks = True
-            self.result = callback(self.result, *args, **kw)
-            if self.result is self:
+            result = callback(self.result, *args, **kw)
+            if result is self:
                 warnAboutFunction(
                     callback,
                     "Callback returned the Deferred "
                     "it was attached to; this breaks the "
                     "callback chain and will raise an "
                     "exception in the future.")
+            return result
         except:
             # Including full frame information in the Failure is quite
             # expensive, so we avoid it unless self.debug is set.
-            self.result = failure.Failure(captureVars=self.debug)
+            return failure.Failure(captureVars=self.debug)
         finally:
             self._runningCallbacks = False
 
