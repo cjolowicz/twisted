@@ -435,6 +435,15 @@ class Deferred:
         return self.addCallbacks(d.callback, d.errback)
 
 
+    def _chainDeferred(self, d):
+        d._chainedTo = self
+        # Note: self has no result, so it's not
+        # running its callbacks right now.  Therefore we can
+        # append to the callbacks list directly instead of
+        # using addCallbacks.
+        self.callbacks.append(d._continuation())
+
+
     def callback(self, result):
         """
         Run all success callbacks that have been added to this L{Deferred}.
@@ -852,7 +861,8 @@ class _CallbackRunner:
                 other = deferred.result
                 if not other._hasResult():
                     # Nope, it didn't.  Pause and chain.
-                    self._chainDeferred(deferred, other)
+                    other._chainDeferred(deferred)
+                    deferred.pause()
                     break
 
                 # Yep, it did.  Steal it.
@@ -863,16 +873,6 @@ class _CallbackRunner:
         # another Deferred or for more callbacks.  Before finishing with it,
         # make sure its _debugInfo is in the proper state.
         deferred._updateDebugInfo()
-
-
-    def _chainDeferred(self, deferred, other):
-        deferred.pause()
-        deferred._chainedTo = other
-        # Note: other has no result, so it's not
-        # running its callbacks right now.  Therefore we can
-        # append to the callbacks list directly instead of
-        # using addCallbacks.
-        other.callbacks.append(deferred._continuation())
 
 
     def _stealResult(self, deferred, other, otherResult):
