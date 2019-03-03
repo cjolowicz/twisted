@@ -625,6 +625,13 @@ class Deferred:
                 self._debugInfo.failResult = None
 
 
+    def _popCallback(self):
+        item = self.callbacks.pop(0)
+        callback, args, kw = item[
+            isinstance(self.result, failure.Failure)]
+        return callback, args or (), kw or {}
+
+
     def __str__(self):
         """
         Return a string representation of this C{Deferred}.
@@ -795,7 +802,7 @@ class _CallbackRunner:
         deferred._chainedTo = None
 
         while deferred.callbacks:
-            callback, args, kw = self._popCallback(deferred)
+            callback, args, kw = deferred._popCallback()
 
             # Avoid recursion if we can.
             if callback is _CONTINUE:
@@ -808,13 +815,6 @@ class _CallbackRunner:
                 return True
 
         return True
-
-
-    def _popCallback(self, deferred):
-        item = deferred.callbacks.pop(0)
-        callback, args, kw = item[
-            isinstance(deferred.result, failure.Failure)]
-        return callback, args or (), kw or {}
 
 
     def _runCallback(self, deferred, callback, *args, **kw):
