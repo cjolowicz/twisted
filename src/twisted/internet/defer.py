@@ -654,7 +654,7 @@ class Deferred:
                 chainee = args[0]
                 # Give the waiting Deferred our current result and then
                 # forget about that result ourselves.
-                chainee._stealResult(self)
+                chainee._takeResult(self)
                 chainee.paused -= 1
                 return chainee
 
@@ -671,7 +671,7 @@ class Deferred:
                     break
 
                 # Yep, it did.  Steal it.
-                self._stealResult(other)
+                self._takeResult(other)
 
         # As much of the callback chain - perhaps all of it - as can be
         # processed right now has been.  The current Deferred is waiting on
@@ -711,7 +711,7 @@ class Deferred:
         return not (result is _NO_RESULT or isinstance(result, Deferred) or self.paused)
 
 
-    def _stealResult(self, other):
+    def _takeResult(self, other):
         self.result, other.result = other.result, None
         # Make sure _debugInfo's failure state is updated.
         if other._debugInfo is not None:
