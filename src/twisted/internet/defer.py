@@ -802,17 +802,19 @@ class Deferred:
 
 class _CallbackRunner:
     def __init__(self, deferred):
+        self.deferred = deferred
+
+
+    def run(self):
         # Keep track of all the Deferreds encountered while propagating results
         # up a chain.  The way a Deferred gets onto this stack is by having
         # added its _continuation() to the callbacks list of a second Deferred
         # and then that second Deferred being fired.  ie, if ever had _chainedTo
         # set to something other than None, you might end up on this stack.
-        self.chain = [deferred]
+        chain = [self.deferred]
 
-
-    def run(self):
-        while self.chain:
-            deferred = self.chain[-1]
+        while chain:
+            deferred = chain[-1]
 
             if deferred.paused:
                 # This Deferred isn't going to produce a result at all.  All the
@@ -823,11 +825,11 @@ class _CallbackRunner:
             chainee = self._runDeferred(deferred)
 
             if chainee:
-                self.chain.append(chainee)
+                chain.append(chainee)
             else:
                 # This Deferred is done, pop it from the chain and move back up
                 # to the Deferred which supplied us with our result.
-                self.chain.pop()
+                chain.pop()
 
 
     def _runDeferred(self, deferred):
