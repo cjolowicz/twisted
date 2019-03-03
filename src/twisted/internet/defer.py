@@ -849,22 +849,18 @@ class _CallbackRunner:
             if isinstance(deferred.result, Deferred):
                 # The result is another Deferred.  If it has a result,
                 # we can take it and keep going.
-                if self._processDeferred(deferred, deferred.result):
+                other = deferred.result
+                if not other._hasResult():
+                    self._chainDeferred(deferred, other)
                     break
+
+                self._stealResult(deferred, other, other.result)
 
         # As much of the callback chain - perhaps all of it - as can be
         # processed right now has been.  The current Deferred is waiting on
         # another Deferred or for more callbacks.  Before finishing with it,
         # make sure its _debugInfo is in the proper state.
         deferred._updateDebugInfo()
-
-
-    def _processDeferred(self, deferred, other):
-        if not other._hasResult():
-            self._chainDeferred(deferred, other)
-            return True
-
-        self._stealResult(deferred, other, other.result)
 
 
     def _chainDeferred(self, deferred, other):
