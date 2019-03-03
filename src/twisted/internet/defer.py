@@ -864,14 +864,7 @@ class _CallbackRunner:
     def _processDeferred(self, deferred, other):
         otherResult = other._getResult()
         if otherResult is _NO_RESULT:
-            # Nope, it didn't.  Pause and chain.
-            deferred.pause()
-            deferred._chainedTo = other
-            # Note: other has no result, so it's not
-            # running its callbacks right now.  Therefore we can
-            # append to the callbacks list directly instead of
-            # using addCallbacks.
-            other.callbacks.append(deferred._continuation())
+            self._chainDeferred(deferred, other)
             return True
 
         # Yep, it did.  Steal it.
@@ -880,6 +873,17 @@ class _CallbackRunner:
         if other._debugInfo is not None:
             other._debugInfo.failResult = None
         deferred.result = otherResult
+
+
+    def _chainDeferred(self, deferred, other):
+        # Nope, it didn't.  Pause and chain.
+        deferred.pause()
+        deferred._chainedTo = other
+        # Note: other has no result, so it's not
+        # running its callbacks right now.  Therefore we can
+        # append to the callbacks list directly instead of
+        # using addCallbacks.
+        other.callbacks.append(deferred._continuation())
 
 
 def _cancelledToTimedOutError(value, timeout):
