@@ -804,9 +804,8 @@ class _CallbackRunner:
                 # until after we've dealt with chainee.
                 return False
 
-            finished = self._runCallback(deferred, callback, *args, **kw)
-            if finished is not None:
-                return finished
+            if self._runCallback(deferred, callback, *args, **kw):
+                return True
 
         return True
 
