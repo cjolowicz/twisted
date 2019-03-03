@@ -875,7 +875,7 @@ class _CallbackRunner:
             # Make sure _debugInfo's failure state is updated.
             if other._debugInfo is not None:
                 other._debugInfo.failResult = None
-            other = resultResult
+            deferred.result = resultResult
 
 
 def _cancelledToTimedOutError(value, timeout):
