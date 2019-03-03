@@ -866,7 +866,7 @@ class _CallbackRunner:
                     break
 
                 # Yep, it did.  Steal it.
-                self._stealResult(deferred, other, other.result)
+                self._stealResult(deferred, other)
 
         # As much of the callback chain - perhaps all of it - as can be
         # processed right now has been.  The current Deferred is waiting on
@@ -875,12 +875,11 @@ class _CallbackRunner:
         deferred._updateDebugInfo()
 
 
-    def _stealResult(self, deferred, other, otherResult):
-        other.result = None
+    def _stealResult(self, deferred, other):
+        deferred.result, other.result = other.result, None
         # Make sure _debugInfo's failure state is updated.
         if other._debugInfo is not None:
             other._debugInfo.failResult = None
-        deferred.result = otherResult
 
 
 def _cancelledToTimedOutError(value, timeout):
