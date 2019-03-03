@@ -821,9 +821,11 @@ class _CallbackRunner:
                 # wait.
                 return
 
-            finished = self._runDeferred(deferred)
+            chainee = self._runDeferred(deferred)
 
-            if finished:
+            if chainee:
+                self.chain.append(chainee)
+            else:
                 # As much of the callback chain - perhaps all of it - as can be
                 # processed right now has been.  The current Deferred is waiting on
                 # another Deferred or for more callbacks.  Before finishing with it,
@@ -845,10 +847,9 @@ class _CallbackRunner:
             if callback is _CONTINUE:
                 chainee = args[0]
                 deferred._continueWith(chainee)
-                self.chain.append(chainee)
                 # Delay cleaning this Deferred and popping it from the chain
                 # until after we've dealt with chainee.
-                return False
+                return chainee
 
             deferred._runCallback(callback, *args, **kw)
 
@@ -856,9 +857,7 @@ class _CallbackRunner:
                 # The result is another Deferred.  If it has a result,
                 # we can take it and keep going.
                 if self._processDeferred(deferred, deferred.result):
-                    return True
-
-        return True
+                    break
 
 
     def _processDeferred(self, deferred, other):
