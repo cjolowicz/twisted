@@ -844,26 +844,22 @@ class _CallbackRunner:
 
     def _runCallback(self, deferred, callback, *args, **kw):
         try:
-            self._invokeCallback(deferred, callback, *args, **kw)
+            deferred._runningCallbacks = True
+            try:
+                deferred.result = callback(deferred.result, *args, **kw)
+                if deferred.result is deferred:
+                    warnAboutFunction(
+                        callback,
+                        "Callback returned the Deferred "
+                        "it was attached to; this breaks the "
+                        "callback chain and will raise an "
+                        "exception in the future.")
+            finally:
+                deferred._runningCallbacks = False
         except:
             # Including full frame information in the Failure is quite
             # expensive, so we avoid it unless self.debug is set.
             deferred.result = failure.Failure(captureVars=self.debug)
-
-
-    def _invokeCallback(self, deferred, callback, *args, **kw):
-        deferred._runningCallbacks = True
-        try:
-            deferred.result = callback(deferred.result, *args, **kw)
-            if deferred.result is deferred:
-                warnAboutFunction(
-                    callback,
-                    "Callback returned the Deferred "
-                    "it was attached to; this breaks the "
-                    "callback chain and will raise an "
-                    "exception in the future.")
-        finally:
-            deferred._runningCallbacks = False
 
 
     def _processDeferred(self, deferred, other):
