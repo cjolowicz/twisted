@@ -623,15 +623,15 @@ class Deferred:
         chain = [self]
 
         while chain:
-            deferred = chain[-1]
+            current = chain[-1]
 
-            if deferred.paused:
+            if current.paused:
                 # This Deferred isn't going to produce a result at all.  All the
                 # Deferreds up the chain waiting on it will just have to...
                 # wait.
                 return
 
-            chainee = deferred._runCallbacksToChainee()
+            chainee = current._runCallbacksToChainee()
 
             if chainee:
                 chain.append(chainee)
