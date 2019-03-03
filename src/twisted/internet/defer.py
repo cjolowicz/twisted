@@ -829,9 +829,7 @@ class _CallbackRunner:
             if isinstance(deferred.result, Deferred):
                 # The result is another Deferred.  If it has a result,
                 # we can take it and keep going.
-                finished = self._processDeferred(deferred, deferred.result)
-                if finished:
-                    return True
+                return self._processDeferred(deferred, deferred.result)
 
 
     def _continueWith(self, deferred, chainee):
