@@ -619,6 +619,42 @@ class Deferred:
         runner.run()
 
 
+    def _runCallbacksToChainee(self):
+        self._chainedTo = None
+
+        while self.callbacks:
+            callback, args, kw = self._popCallback()
+
+            # Avoid recursion if we can.
+            if callback is _CONTINUE:
+                chainee = args[0]
+                self._continueWith(chainee)
+                # Delay cleaning this Deferred and popping it from the chain
+                # until after we've dealt with chainee.
+                return chainee
+
+            self._runCallback(callback, *args, **kw)
+
+            if isinstance(self.result, Deferred):
+                # The result is another Deferred.  If it has a result,
+                # we can take it and keep going.
+                other = self.result
+                if not other._hasResult():
+                    # Nope, it didn't.  Pause and chain.
+                    other._chainDeferred(self)
+                    self.pause()
+                    break
+
+                # Yep, it did.  Steal it.
+                self._stealResult(other)
+
+        # As much of the callback chain - perhaps all of it - as can be
+        # processed right now has been.  The current Deferred is waiting on
+        # another Deferred or for more callbacks.  Before finishing with it,
+        # make sure its _debugInfo is in the proper state.
+        self._updateDebugInfo()
+
+
     def _updateDebugInfo(self):
         if isinstance(self.result, failure.Failure):
             # Stash the Failure in the _debugInfo for unhandled error
@@ -836,7 +872,7 @@ class _CallbackRunner:
                 # wait.
                 return
 
-            chainee = self._runCallbacksToChainee(deferred)
+            chainee = deferred._runCallbacksToChainee()
 
             if chainee:
                 chain.append(chainee)
@@ -844,42 +880,6 @@ class _CallbackRunner:
                 # This Deferred is done, pop it from the chain and move back up
                 # to the Deferred which supplied us with our result.
                 chain.pop()
-
-
-    def _runCallbacksToChainee(self, deferred):
-        deferred._chainedTo = None
-
-        while deferred.callbacks:
-            callback, args, kw = deferred._popCallback()
-
-            # Avoid recursion if we can.
-            if callback is _CONTINUE:
-                chainee = args[0]
-                deferred._continueWith(chainee)
-                # Delay cleaning this Deferred and popping it from the chain
-                # until after we've dealt with chainee.
-                return chainee
-
-            deferred._runCallback(callback, *args, **kw)
-
-            if isinstance(deferred.result, Deferred):
-                # The result is another Deferred.  If it has a result,
-                # we can take it and keep going.
-                other = deferred.result
-                if not other._hasResult():
-                    # Nope, it didn't.  Pause and chain.
-                    other._chainDeferred(deferred)
-                    deferred.pause()
-                    break
-
-                # Yep, it did.  Steal it.
-                deferred._stealResult(other)
-
-        # As much of the callback chain - perhaps all of it - as can be
-        # processed right now has been.  The current Deferred is waiting on
-        # another Deferred or for more callbacks.  Before finishing with it,
-        # make sure its _debugInfo is in the proper state.
-        deferred._updateDebugInfo()
 
 
 def _cancelledToTimedOutError(value, timeout):
