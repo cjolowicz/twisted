@@ -862,8 +862,8 @@ class _CallbackRunner:
 
 
     def _processDeferred(self, deferred, other):
-        resultResult = getattr(other, 'result', _NO_RESULT)
-        if resultResult is _NO_RESULT or isinstance(resultResult, Deferred) or other.paused:
+        otherResult = getattr(other, 'result', _NO_RESULT)
+        if otherResult is _NO_RESULT or isinstance(otherResult, Deferred) or other.paused:
             # Nope, it didn't.  Pause and chain.
             deferred.pause()
             deferred._chainedTo = other
@@ -879,7 +879,7 @@ class _CallbackRunner:
             # Make sure _debugInfo's failure state is updated.
             if other._debugInfo is not None:
                 other._debugInfo.failResult = None
-            deferred.result = resultResult
+            deferred.result = otherResult
 
 
 def _cancelledToTimedOutError(value, timeout):
