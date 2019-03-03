@@ -801,13 +801,13 @@ class _CallbackRunner:
             args = args or ()
             kw = kw or {}
 
-            finished = self._runDeferredCallback(deferred, callback, *args, **kw)
+            finished = self._runCallback(deferred, callback, *args, **kw)
             if finished is not None:
                 return finished
         return True
 
 
-    def _runDeferredCallback(self, deferred, callback, *args, **kw):
+    def _runCallback(self, deferred, callback, *args, **kw):
         # Avoid recursion if we can.
         if callback is _CONTINUE:
             return self._processChainee(deferred, args[0])
