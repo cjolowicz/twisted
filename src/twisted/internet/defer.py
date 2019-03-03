@@ -873,13 +873,13 @@ class _CallbackRunner:
             # using addCallbacks.
             other.callbacks.append(deferred._continuation())
             return True
-        else:
-            # Yep, it did.  Steal it.
-            other.result = None
-            # Make sure _debugInfo's failure state is updated.
-            if other._debugInfo is not None:
-                other._debugInfo.failResult = None
-            deferred.result = otherResult
+
+        # Yep, it did.  Steal it.
+        other.result = None
+        # Make sure _debugInfo's failure state is updated.
+        if other._debugInfo is not None:
+            other._debugInfo.failResult = None
+        deferred.result = otherResult
 
 
 def _cancelledToTimedOutError(value, timeout):
