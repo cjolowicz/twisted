@@ -813,7 +813,7 @@ class _CallbackRunner:
     def _runCallback(self, deferred, callback, *args, **kw):
         # Avoid recursion if we can.
         if callback is _CONTINUE:
-            return self._processChainee(deferred, args[0])
+            return self._continueWith(deferred, args[0])
 
         try:
             self._invokeCallback(deferred, callback, *args, **kw)
@@ -830,7 +830,7 @@ class _CallbackRunner:
                     return True
 
 
-    def _processChainee(self, deferred, chainee):
+    def _continueWith(self, deferred, chainee):
         # Give the waiting Deferred our current result and then
         # forget about that result ourselves.
         chainee.result = deferred.result
