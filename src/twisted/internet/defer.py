@@ -687,11 +687,7 @@ class Deferred:
     def _continueWith(self, other):
         # Give the waiting Deferred our current result and then
         # forget about that result ourselves.
-        other.result = self.result
-        self.result = None
-        # Making sure to update _debugInfo
-        if self._debugInfo is not None:
-            self._debugInfo.failResult = None
+        other._stealResult(self)
         other.paused -= 1
 
 
