@@ -831,8 +831,13 @@ class _CallbackRunner:
                 # until after we've dealt with chainee.
                 return False
 
-            if self._runCallback(deferred, callback, *args, **kw):
-                return True
+            self._runCallback(deferred, callback, *args, **kw)
+
+            if isinstance(deferred.result, Deferred):
+                # The result is another Deferred.  If it has a result,
+                # we can take it and keep going.
+                if self._processDeferred(deferred, deferred.result):
+                    return True
 
         return True
 
@@ -844,11 +849,6 @@ class _CallbackRunner:
             # Including full frame information in the Failure is quite
             # expensive, so we avoid it unless self.debug is set.
             deferred.result = failure.Failure(captureVars=self.debug)
-
-        if isinstance(deferred.result, Deferred):
-            # The result is another Deferred.  If it has a result,
-            # we can take it and keep going.
-            return self._processDeferred(deferred, deferred.result)
 
 
     def _invokeCallback(self, deferred, callback, *args, **kw):
