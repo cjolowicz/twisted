@@ -817,6 +817,18 @@ class _CallbackRunner:
         return True
 
 
+    def _continueWith(self, deferred, chainee):
+        # Give the waiting Deferred our current result and then
+        # forget about that result ourselves.
+        chainee.result = deferred.result
+        deferred.result = None
+        # Making sure to update _debugInfo
+        if deferred._debugInfo is not None:
+            deferred._debugInfo.failResult = None
+        chainee.paused -= 1
+        self.chain.append(chainee)
+
+
     def _runCallback(self, deferred, callback, *args, **kw):
         try:
             self._invokeCallback(deferred, callback, *args, **kw)
@@ -829,18 +841,6 @@ class _CallbackRunner:
                 # The result is another Deferred.  If it has a result,
                 # we can take it and keep going.
                 return self._processDeferred(deferred, deferred.result)
-
-
-    def _continueWith(self, deferred, chainee):
-        # Give the waiting Deferred our current result and then
-        # forget about that result ourselves.
-        chainee.result = deferred.result
-        deferred.result = None
-        # Making sure to update _debugInfo
-        if deferred._debugInfo is not None:
-            deferred._debugInfo.failResult = None
-        chainee.paused -= 1
-        self.chain.append(chainee)
 
 
     def _invokeCallback(self, deferred, callback, *args, **kw):
