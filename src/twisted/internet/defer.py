@@ -684,6 +684,17 @@ class Deferred:
         return callback, args or (), kw or {}
 
 
+    def _continueWith(self, other):
+        # Give the waiting Deferred our current result and then
+        # forget about that result ourselves.
+        other.result = self.result
+        self.result = None
+        # Making sure to update _debugInfo
+        if self._debugInfo is not None:
+            self._debugInfo.failResult = None
+        other.paused -= 1
+
+
     def _updateDebugInfo(self):
         if isinstance(self.result, failure.Failure):
             # Stash the Failure in the _debugInfo for unhandled error
@@ -697,17 +708,6 @@ class Deferred:
             # is no longer a Failure.
             if self._debugInfo is not None:
                 self._debugInfo.failResult = None
-
-
-    def _continueWith(self, other):
-        # Give the waiting Deferred our current result and then
-        # forget about that result ourselves.
-        other.result = self.result
-        self.result = None
-        # Making sure to update _debugInfo
-        if self._debugInfo is not None:
-            self._debugInfo.failResult = None
-        other.paused -= 1
 
 
     def _hasResult(self):
