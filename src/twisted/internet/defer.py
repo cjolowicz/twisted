@@ -652,7 +652,10 @@ class Deferred:
             # Avoid recursion if we can.
             if callback is _CONTINUE:
                 chainee = args[0]
-                self._continueWith(chainee)
+                # Give the waiting Deferred our current result and then
+                # forget about that result ourselves.
+                chainee._stealResult(self)
+                chainee.paused -= 1
                 return chainee
 
             self._runCallback(callback, *args, **kw)
@@ -682,13 +685,6 @@ class Deferred:
         callback, args, kw = item[
             isinstance(self.result, failure.Failure)]
         return callback, args or (), kw or {}
-
-
-    def _continueWith(self, other):
-        # Give the waiting Deferred our current result and then
-        # forget about that result ourselves.
-        other._stealResult(self)
-        other.paused -= 1
 
 
     def _runCallback(self, callback, *args, **kw):
