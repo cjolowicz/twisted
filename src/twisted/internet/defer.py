@@ -444,6 +444,14 @@ class Deferred:
         self.callbacks.append(d._continuation())
 
 
+    def _continuation(self):
+        """
+        Build a tuple of callback and errback with L{_CONTINUE}.
+        """
+        return ((_CONTINUE, (self,), None),
+                (_CONTINUE, (self,), None))
+
+
     def callback(self, result):
         """
         Run all success callbacks that have been added to this L{Deferred}.
@@ -575,14 +583,6 @@ class Deferred:
         self.called = True
         self.result = result
         self._runCallbacks()
-
-
-    def _continuation(self):
-        """
-        Build a tuple of callback and errback with L{_CONTINUE}.
-        """
-        return ((_CONTINUE, (self,), None),
-                (_CONTINUE, (self,), None))
 
 
     def _runCallbacks(self):
