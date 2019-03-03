@@ -806,7 +806,9 @@ class _CallbackRunner:
 
             # Avoid recursion if we can.
             if callback is _CONTINUE:
-                self._continueWith(deferred, args[0])
+                chainee = args[0]
+                self._continueWith(deferred, chainee)
+                self.chain.append(chainee)
                 # Delay cleaning this Deferred and popping it from the chain
                 # until after we've dealt with chainee.
                 return False
@@ -826,7 +828,6 @@ class _CallbackRunner:
         if deferred._debugInfo is not None:
             deferred._debugInfo.failResult = None
         chainee.paused -= 1
-        self.chain.append(chainee)
 
 
     def _runCallback(self, deferred, callback, *args, **kw):
