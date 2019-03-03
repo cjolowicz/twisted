@@ -695,6 +695,25 @@ class Deferred:
         other.paused -= 1
 
 
+    def _runCallback(self, callback, *args, **kw):
+        try:
+            self._runningCallbacks = True
+            self.result = callback(self.result, *args, **kw)
+            if self.result is self:
+                warnAboutFunction(
+                    callback,
+                    "Callback returned the Deferred "
+                    "it was attached to; this breaks the "
+                    "callback chain and will raise an "
+                    "exception in the future.")
+        except:
+            # Including full frame information in the Failure is quite
+            # expensive, so we avoid it unless self.debug is set.
+            self.result = failure.Failure(captureVars=self.debug)
+        finally:
+            self._runningCallbacks = False
+
+
     def _updateDebugInfo(self):
         if isinstance(self.result, failure.Failure):
             # Stash the Failure in the _debugInfo for unhandled error
@@ -713,25 +732,6 @@ class Deferred:
     def _hasResult(self):
         result = getattr(self, 'result', _NO_RESULT)
         return not (result is _NO_RESULT or isinstance(result, Deferred) or self.paused)
-
-
-    def _runCallback(self, callback, *args, **kw):
-        try:
-            self._runningCallbacks = True
-            self.result = callback(self.result, *args, **kw)
-            if self.result is self:
-                warnAboutFunction(
-                    callback,
-                    "Callback returned the Deferred "
-                    "it was attached to; this breaks the "
-                    "callback chain and will raise an "
-                    "exception in the future.")
-        except:
-            # Including full frame information in the Failure is quite
-            # expensive, so we avoid it unless self.debug is set.
-            self.result = failure.Failure(captureVars=self.debug)
-        finally:
-            self._runningCallbacks = False
 
 
     def _stealResult(self, other):
