@@ -688,8 +688,8 @@ class Deferred:
 
 
     def _runCallback(self, callback, *args, **kw):
+        self._runningCallbacks = True
         try:
-            self._runningCallbacks = True
             result = callback(self.result, *args, **kw)
             if result is self:
                 warnAboutFunction(
