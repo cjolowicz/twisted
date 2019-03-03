@@ -836,7 +836,7 @@ class _CallbackRunner:
                 # wait.
                 return
 
-            chainee = self._runDeferred(deferred)
+            chainee = self._runCallbacksToChainee(deferred)
 
             if chainee:
                 chain.append(chainee)
@@ -846,7 +846,7 @@ class _CallbackRunner:
                 chain.pop()
 
 
-    def _runDeferred(self, deferred):
+    def _runCallbacksToChainee(self, deferred):
         deferred._chainedTo = None
 
         while deferred.callbacks:
