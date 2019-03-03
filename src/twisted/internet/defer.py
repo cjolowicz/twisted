@@ -867,12 +867,7 @@ class _CallbackRunner:
             self._chainDeferred(deferred, other)
             return True
 
-        # Yep, it did.  Steal it.
-        other.result = None
-        # Make sure _debugInfo's failure state is updated.
-        if other._debugInfo is not None:
-            other._debugInfo.failResult = None
-        deferred.result = otherResult
+        self._stealResult(deferred, other, otherResult)
 
 
     def _chainDeferred(self, deferred, other):
@@ -884,6 +879,15 @@ class _CallbackRunner:
         # append to the callbacks list directly instead of
         # using addCallbacks.
         other.callbacks.append(deferred._continuation())
+
+
+    def _stealResult(self, deferred, other, otherResult):
+        # Yep, it did.  Steal it.
+        other.result = None
+        # Make sure _debugInfo's failure state is updated.
+        if other._debugInfo is not None:
+            other._debugInfo.failResult = None
+        deferred.result = otherResult
 
 
 def _cancelledToTimedOutError(value, timeout):
