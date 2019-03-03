@@ -851,9 +851,11 @@ class _CallbackRunner:
                 # we can take it and keep going.
                 other = deferred.result
                 if not other._hasResult():
+                    # Nope, it didn't.  Pause and chain.
                     self._chainDeferred(deferred, other)
                     break
 
+                # Yep, it did.  Steal it.
                 self._stealResult(deferred, other, other.result)
 
         # As much of the callback chain - perhaps all of it - as can be
@@ -864,7 +866,6 @@ class _CallbackRunner:
 
 
     def _chainDeferred(self, deferred, other):
-        # Nope, it didn't.  Pause and chain.
         deferred.pause()
         deferred._chainedTo = other
         # Note: other has no result, so it's not
@@ -875,7 +876,6 @@ class _CallbackRunner:
 
 
     def _stealResult(self, deferred, other, otherResult):
-        # Yep, it did.  Steal it.
         other.result = None
         # Make sure _debugInfo's failure state is updated.
         if other._debugInfo is not None:
