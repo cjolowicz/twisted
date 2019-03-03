@@ -677,6 +677,13 @@ class Deferred:
         self._updateDebugInfo()
 
 
+    def _popCallback(self):
+        item = self.callbacks.pop(0)
+        callback, args, kw = item[
+            isinstance(self.result, failure.Failure)]
+        return callback, args or (), kw or {}
+
+
     def _updateDebugInfo(self):
         if isinstance(self.result, failure.Failure):
             # Stash the Failure in the _debugInfo for unhandled error
@@ -690,13 +697,6 @@ class Deferred:
             # is no longer a Failure.
             if self._debugInfo is not None:
                 self._debugInfo.failResult = None
-
-
-    def _popCallback(self):
-        item = self.callbacks.pop(0)
-        callback, args, kw = item[
-            isinstance(self.result, failure.Failure)]
-        return callback, args or (), kw or {}
 
 
     def _continueWith(self, other):
