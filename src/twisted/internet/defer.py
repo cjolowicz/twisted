@@ -826,12 +826,6 @@ class _CallbackRunner:
             if chainee:
                 self.chain.append(chainee)
             else:
-                # As much of the callback chain - perhaps all of it - as can be
-                # processed right now has been.  The current Deferred is waiting on
-                # another Deferred or for more callbacks.  Before finishing with it,
-                # make sure its _debugInfo is in the proper state.
-                deferred._updateDebugInfo()
-
                 # This Deferred is done, pop it from the chain and move back up
                 # to the Deferred which supplied us with our result.
                 self.chain.pop()
@@ -858,6 +852,12 @@ class _CallbackRunner:
                 # we can take it and keep going.
                 if self._processDeferred(deferred, deferred.result):
                     break
+
+        # As much of the callback chain - perhaps all of it - as can be
+        # processed right now has been.  The current Deferred is waiting on
+        # another Deferred or for more callbacks.  Before finishing with it,
+        # make sure its _debugInfo is in the proper state.
+        deferred._updateDebugInfo()
 
 
     def _processDeferred(self, deferred, other):
